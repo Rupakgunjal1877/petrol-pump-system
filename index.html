@@ -1,0 +1,3146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FuelFlow - Petrol Pump Management System</title>
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CDNs for visual libraries -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.autotable.min.js"></script>
+
+  <style>
+    /* MASTER CSS DESIGN SYSTEM */
+    :root {
+      --font-family: 'Outfit', -apple-system, sans-serif;
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      
+      --primary: #0f172a;
+      --primary-hover: #1e293b;
+      --primary-light: #e2e8f0;
+      
+      --accent: #f97316;
+      --accent-hover: #ea580c;
+      --accent-light: #ffedd5;
+      
+      --border-color: #e2e8f0;
+      --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      --card-shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      
+      --success: #22c55e;
+      --success-light: #dcfce7;
+      --warning: #eab308;
+      --warning-light: #fef9c3;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+
+      --sidebar-width: 260px;
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #090d16;
+      --bg-secondary: #111827;
+      --bg-tertiary: #1f2937;
+      
+      --text-primary: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-muted: #6b7280;
+      
+      --primary: #374151;
+      --primary-hover: #4b5563;
+      --primary-light: #1f2937;
+      
+      --border-color: #2b3544;
+      --card-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.3);
+      --card-shadow-hover: 0 12px 20px 0 rgba(0, 0, 0, 0.45);
+      
+      --success-light: rgba(34, 197, 94, 0.15);
+      --warning-light: rgba(234, 179, 8, 0.15);
+      --danger-light: rgba(239, 68, 68, 0.15);
+      --accent-light: rgba(249, 115, 22, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: var(--transition-smooth);
+    }
+
+    a, button {
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    /* Auth Wrapper */
+    .auth-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #ea580c 100%);
+      padding: 1.5rem;
+    }
+
+    .auth-card {
+      background-color: var(--bg-secondary);
+      width: 100%;
+      max-width: 440px;
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      animation: slideUp 0.5s ease;
+    }
+
+    /* Layout Shell */
+    .app-container {
+      display: none; /* Controlled by JS */
+      min-height: 100vh;
+    }
+
+    .sidebar-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      transition: var(--transition-smooth);
+    }
+
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      min-width: 0;
+      transition: var(--transition-smooth);
+    }
+
+    .app-header {
+      height: 70px;
+      background-color: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      margin: -2rem -2rem 0 -2rem;
+      transition: var(--transition-smooth);
+    }
+
+    /* Page container tab panels */
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.4s ease;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
+    /* Grids & Cards */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 1200px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      box-shadow: var(--card-shadow);
+      transition: var(--transition-smooth);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* KPI metric layout */
+    .kpi-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .kpi-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .kpi-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Forms */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: var(--transition-smooth);
+    }
+
+    .input-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      transition: var(--transition-smooth);
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: var(--primary-light);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--border-color);
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+
+    .btn-sm {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      border-radius: 4px;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      margin-top: 1rem;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      background-color: var(--bg-secondary);
+    }
+
+    .data-table th {
+      background-color: var(--bg-tertiary);
+      padding: 1rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    .data-table tbody tr:hover {
+      background-color: var(--bg-primary);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+
+    .badge-success {
+      background-color: var(--success-light);
+      color: var(--success);
+    }
+
+    .badge-warning {
+      background-color: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .badge-danger {
+      background-color: var(--danger-light);
+      color: var(--danger);
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .modal-content {
+      background-color: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-color);
+      animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .receipt-box {
+      background-color: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 1.5rem;
+      font-family: 'Courier New', monospace;
+      color: #0f172a;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .filter-bar {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .filter-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      fontWeight: 500;
+      fontSize: 0.95rem;
+      color: var(--text-secondary);
+      border-left: 4px solid transparent;
+    }
+
+    .sidebar-link.active {
+      background-color: var(--accent-light);
+      color: var(--accent);
+      border-left: 4px solid var(--accent);
+      font-weight: 600;
+    }
+
+    .alert-pulse {
+      animation: pulse-red 2s infinite;
+      background-color: var(--danger-light);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+    }
+
+    /* Print settings */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-area, #print-area * {
+        visibility: visible;
+      }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+        color: black;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes pulse-red {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      70% { transform: scale(1.03); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      .sidebar-nav {
+        transform: translateX(-100%);
+      }
+      .sidebar-nav.open {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0;
+        padding-top: 5rem;
+      }
+      .app-header {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        padding: 0 1.5rem;
+      }
+      .mobile-toggle {
+        display: flex !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== 1. LOGIN SCREEN ==================== -->
+  <div id="login-view" class="auth-wrapper">
+    <div class="auth-card">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center;">
+        <div style="background-color: var(--accent); color: white; width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(249, 115, 22, 0.4); margin-bottom: 0.5rem;">
+          <i data-lucide="droplets" style="width: 32px; height: 32px; fill: white;"></i>
+        </div>
+        <h2 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.025em;">
+          Welcome to <span style="color: var(--accent);">FuelFlow</span>
+        </h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+          Enterprise Petrol Station Management Console
+        </p>
+      </div>
+
+      <!-- Error Alert -->
+      <div id="login-error" style="display: none; align-items: center; gap: 0.5rem; background-color: var(--danger-light); border: 1px solid var(--danger); color: var(--danger); padding: 0.75rem 1rem; border-radius: var(--radius-sm); fontSize: 0.85rem; fontWeight: 600;">
+        <i data-lucide="alert-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+        <span id="login-error-text">Invalid admin credentials</span>
+      </div>
+
+      <form id="login-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Administrator Email</label>
+          <div style="position: relative;">
+            <input id="login-email" type="email" class="input-field" placeholder="admin@fuelflow.com" required style="padding-left: 2.5rem;" />
+            <i data-lucide="mail" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Security Password</label>
+          <div style="position: relative;">
+            <input id="login-password" type="password" class="input-field" placeholder="••••••••" required style="padding-left: 2.5rem;" />
+            <i data-lucide="lock" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px;"></i>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; margin-top: 0.5rem;">
+          Access Dashboard
+        </button>
+      </form>
+
+      <div style="background-color: var(--bg-primary); border-radius: var(--radius-sm); border: 1px dashed var(--border-color); padding: 1rem; display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">
+        <i data-lucide="fuel" style="color: var(--accent); flex-shrink: 0; margin-top: 2px; width: 16px; height: 16px;"></i>
+        <div>
+          <span style="font-weight: 700; color: var(--text-primary);">System Auto-Seed:</span>
+          <p>Log in with the template details below:</p>
+          <p style="font-family: monospace; margin: 4px 0; font-size: 0.85rem;">
+            User: <strong style="color: var(--accent);">admin@fuelflow.com</strong><br />
+            Pass: <strong style="color: var(--accent);">admin123</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================== 2. APP SHELL LAYOUT ==================== -->
+  <div id="app-view" class="app-container">
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar-nav">
+      <div style="padding: 1.75rem 1.5rem; display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--border-color);">
+        <div style="background-color: var(--accent); color: white; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3);">
+          <i data-lucide="droplets" style="width: 22px; height: 22px; fill: white;"></i>
+        </div>
+        <div>
+          <h1 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.025em; background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">FuelFlow</h1>
+          <p style="font-size: 0.65rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Management System</p>
+        </div>
+      </div>
+
+      <nav style="padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.4rem; flex: 1;">
+        <a class="sidebar-link active" onclick="navigateTab('dashboard')">
+          <i data-lucide="layout-dashboard" style="width: 19px; height: 19px;"></i><span>Dashboard</span>
+        </a>
+        <a class="sidebar-link" onclick="navigateTab('fuel')">
+          <i data-lucide="fuel" style="width: 19px; height: 19px;"></i><span>Fuel Inventory</span>
+        </a>
+        <a class="sidebar-link" onclick="navigateTab('employees')">
+          <i data-lucide="users" style="width: 19px; height: 19px;"></i><span>Employee Roster</span>
+        </a>
+        <a class="sidebar-link" onclick="navigateTab('billing')">
+          <i data-lucide="receipt" style="width: 19px; height: 19px;"></i><span>POS Billing</span>
+        </a>
+        <a class="sidebar-link" onclick="navigateTab('reports')">
+          <i data-lucide="bar-chart-3" style="width: 19px; height: 19px;"></i><span>Sales Reports</span>
+        </a>
+        <a class="sidebar-link" onclick="navigateTab('settings')">
+          <i data-lucide="settings" style="width: 19px; height: 19px;"></i><span>Settings</span>
+        </a>
+      </nav>
+
+      <div style="padding: 1.25rem 1rem; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 1rem; background-color: var(--bg-primary);">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div id="admin-avatar" style="width: 38px; height: 38px; border-radius: 50%; background-color: var(--primary-light); color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; border: 1px solid var(--border-color);">
+            A
+          </div>
+          <div style="overflow: hidden;">
+            <p id="admin-sidebar-name" style="font-size: 0.85rem; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">Station Director</p>
+            <p id="admin-sidebar-pump" style="font-size: 0.7rem; color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">FuelFlow Station</p>
+          </div>
+        </div>
+        <button onclick="handleLogout()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background-color: var(--bg-secondary); color: var(--danger); font-weight: 600; font-size: 0.85rem;">
+          <i data-lucide="log-out" style="width: 16px; height: 16px;"></i><span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      
+      <!-- App Header -->
+      <header class="app-header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="mobile-toggle" onclick="toggleMobileSidebar()" style="background: none; border: none; color: var(--text-primary); display: none; padding: 4px;">
+            <i data-lucide="menu" style="width: 24px; height: 24px;"></i>
+          </button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+            <i data-lucide="map-pin" style="color: var(--accent); width: 16px; height: 16px;"></i>
+            <span id="header-pump-name" style="font-size: 0.9rem; font-weight: 600;">FuelFlow Apex Station</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+          <!-- Glowing stock alarm bar -->
+          <div id="low-stock-alert-header" style="display: none;">
+            <a onclick="navigateTab('fuel')" class="alert-pulse" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-decoration: none;">
+              <i data-lucide="alert-triangle" style="width: 14px; height: 14px;"></i>
+              <span id="low-stock-alert-header-text">LOW STOCK WARNINGS</span>
+            </a>
+          </div>
+
+          <!-- Theme Toggle -->
+          <button onclick="handleThemeToggle()" style="background: none; border: 1px solid var(--border-color); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--text-primary); background-color: var(--bg-primary);">
+            <i id="theme-btn-icon" data-lucide="sun" style="width: 18px; height: 18px;"></i>
+          </button>
+
+          <!-- Notifications icon decoration -->
+          <div style="position: relative; border: 1px solid var(--border-color); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--text-primary); background-color: var(--bg-primary);">
+            <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+            <span id="notification-dot" style="position: absolute; top: 2px; right: 2px; width: 10px; height: 10px; border-radius: 50%; background-color: var(--danger); border: 2px solid var(--bg-secondary); display: none;"></span>
+          </div>
+
+          <div class="header-profile" style="display: flex; align-items: center; gap: 0.5rem; padding-left: 0.75rem; border-left: 1px solid var(--border-color);">
+            <span id="header-admin-name" style="font-size: 0.85rem; font-weight: 600;">Station Director</span>
+            <span style="font-size: 0.7rem; background-color: var(--accent); color: white; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; text-transform: uppercase;">Admin</span>
+          </div>
+        </div>
+      </header>
+
+
+      <!-- ==================== 3. VIEW: DASHBOARD TAB ==================== -->
+      <div id="panel-dashboard" class="tab-panel active">
+        <!-- Dashboard welcome cards -->
+        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: var(--radius-lg); padding: 2rem; border: 1px solid var(--border-color); color: white; position: relative; overflow: hidden; box-shadow: var(--card-shadow);">
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 600px; z-index: 10;">
+            <div style="display: inline-flex; align-items: center; gap: 0.4rem; backgroundColor: rgba(249, 115, 22, 0.2); color: var(--accent); padding: 0.3rem 0.75rem; borderRadius: 9999px; fontSize: 0.75rem; fontWeight: 700; width: fit-content;">
+              <i data-lucide="zap" style="width: 12px; height: 12px; fill: var(--accent);"></i>
+              <span>ENTERPRISE MANAGEMENT ACTIVE</span>
+            </div>
+            <h2 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.025em;">
+              Hello, <span id="dash-greeting-name">Station Manager</span>!
+            </h2>
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5;">
+              Station analytics are operating normally. Review stock levels, execute new pump POS transactions, or generate comprehensive sales reports below.
+            </p>
+          </div>
+        </div>
+
+        <!-- Dashboard Low Stock warning banner -->
+        <div id="low-stock-critical-banner" style="display: none; justify-content: space-between; align-items: center; background-color: var(--danger-light); border: 1px solid var(--danger); border-radius: var(--radius-md); padding: 1rem 1.5rem; color: var(--danger); flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="background-color: var(--danger); color: white; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="alert-triangle" style="width: 20px; height: 20px;"></i>
+            </div>
+            <div>
+              <p style="font-weight: 700; font-size: 0.95rem;">Inventory Stock Warning Alert!</p>
+              <p id="low-stock-banner-text" style="font-size: 0.85rem; opacity: 0.9;"></p>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="navigateTab('fuel')" style="font-weight: 700;">
+            <span>Refill Stock</span>
+            <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+          </button>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="dashboard-grid">
+          <div class="card kpi-card">
+            <div class="kpi-info">
+              <span class="kpi-label">Total Fuel Sales</span>
+              <span id="kpi-revenue" class="kpi-value">0.00</span>
+            </div>
+            <div class="kpi-icon-box" style="background-color: var(--success-light); color: var(--success);">
+              <i data-lucide="dollar-sign" style="width: 24px; height: 24px;"></i>
+            </div>
+          </div>
+
+          <div class="card kpi-card">
+            <div class="kpi-info">
+              <span class="kpi-label">Fuel Stock Available</span>
+              <span id="kpi-stock" class="kpi-value">0L</span>
+            </div>
+            <div class="kpi-icon-box" style="background-color: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+              <i data-lucide="fuel" style="width: 24px; height: 24px;"></i>
+            </div>
+          </div>
+
+          <div class="card kpi-card">
+            <div class="kpi-info">
+              <span class="kpi-label">Daily Revenue</span>
+              <span id="kpi-daily" class="kpi-value">0.00</span>
+            </div>
+            <div class="kpi-icon-box" style="background-color: var(--accent-light); color: var(--accent);">
+              <i data-lucide="trending-up" style="width: 24px; height: 24px;"></i>
+            </div>
+          </div>
+
+          <div class="card kpi-card">
+            <div class="kpi-info">
+              <span class="kpi-label">Employee Count</span>
+              <span id="kpi-crew" class="kpi-value">0 Active</span>
+            </div>
+            <div class="kpi-icon-box" style="background-color: rgba(168, 85, 247, 0.15); color: #a855f7;">
+              <i data-lucide="users" style="width: 24px; height: 24px;"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+          <div class="card" style="min-height: 380px; display: flex; flex-direction: column;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Weekly Revenue Performance</h3>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">Daily revenue metrics over the last 7 operating days</p>
+              </div>
+            </div>
+            <div style="flex: 1; position: relative; min-height: 250px;">
+              <canvas id="revenueLineChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card" style="min-height: 380px; display: flex; flex-direction: column;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Fuel Usage Statistics</h3>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">Distribution of fuel volume currently inside ground tanks</p>
+              </div>
+            </div>
+            <div style="flex: 1; position: relative; min-height: 250px;">
+              <canvas id="fuelDoughnutChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Logs Table -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Recent Invoices</h3>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Real-time listing of the latest five sales registered at POS pump terminals</p>
+            </div>
+            <a onclick="navigateTab('reports')" style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; color: var(--accent); font-weight: 600; text-decoration: none;">
+              <span>View All Log Files</span>
+              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+            </a>
+          </div>
+
+          <div class="table-container" style="margin-top: 0;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Bill ID</th>
+                  <th>Customer Profile</th>
+                  <th>Fuel Grade</th>
+                  <th>Quantity (L)</th>
+                  <th>Payment Type</th>
+                  <th>Net Charge</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-recent-txns-body">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ==================== 4. VIEW: FUEL INVENTORY ==================== -->
+      <div id="panel-fuel" class="tab-panel">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title">Fuel Inventory Manager</h2>
+            <p style="color: var(--text-secondary); fontSize: 0.9rem;">
+              Monitor tank levels, adjust retail prices, and process supply bulk refilling operations
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('modal-add-fuel')">
+            <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+            <span>Add Fuel Grade</span>
+          </button>
+        </div>
+
+        <!-- Fuel Progress Grid -->
+        <div id="fuel-tanks-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          <!-- Injected dynamically -->
+        </div>
+
+        <div class="card" style="display: flex; gap: 1rem; align-items: center; background-color: var(--bg-secondary); border-left: 5px solid var(--accent);">
+          <i data-lucide="sparkles" style="color: var(--accent); flex-shrink: 0; width: 24px; height: 24px;"></i>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+            <strong>Pricing recommendation:</strong> Fuel rates automatically update retail calculations on the POS Invoicing checkout page immediately. Be sure to coordinate price fluctuations in compliance with state regulations.
+          </p>
+        </div>
+      </div>
+
+
+      <!-- ==================== 5. VIEW: EMPLOYEE ROSTER ==================== -->
+      <div id="panel-employees" class="tab-panel">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title">Employee Management & Roster</h2>
+            <p style="color: var(--text-secondary); fontSize: 0.9rem;">
+              Coordinate work rosters, assign shifts, manage payroll disbursements, and update crew details
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('modal-add-emp')">
+            <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+            <span>Add Employee</span>
+          </button>
+        </div>
+
+        <!-- Shift Schedule Grid -->
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="clock" style="color: var(--accent); width: 20px; height: 20px;"></i>
+            <span>Shift Assignments</span>
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            
+            <div class="card" style="display: flex; flex-direction: column; gap: 1rem; border-top: 4px solid #3b82f6;">
+              <h4 style="font-weight: 700; color: #3b82f6; display: flex; justify-content: space-between; align-items: center;">
+                <span>Morning Shift</span>
+                <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">06:00 - 14:00</span>
+              </h4>
+              <div id="shift-morning-list" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
+            </div>
+
+            <div class="card" style="display: flex; flex-direction: column; gap: 1rem; border-top: 4px solid #f97316;">
+              <h4 style="font-weight: 700; color: #f97316; display: flex; justify-content: space-between; align-items: center;">
+                <span>Afternoon Shift</span>
+                <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">14:00 - 22:00</span>
+              </h4>
+              <div id="shift-afternoon-list" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
+            </div>
+
+            <div class="card" style="display: flex; flex-direction: column; gap: 1rem; border-top: 4px solid #a855f7;">
+              <h4 style="font-weight: 700; color: #a855f7; display: flex; justify-content: space-between; align-items: center;">
+                <span>Night Shift</span>
+                <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">22:00 - 06:00</span>
+              </h4>
+              <div id="shift-night-list" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Employee register card -->
+        <div class="card">
+          <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="briefcase" style="color: var(--accent); width: 20px; height: 20px;"></i>
+            <span>Employee Register</span>
+          </h3>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">Click and record salary payments or modify crew profiles below</p>
+
+          <div class="table-container" style="margin-top: 0;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Crew Member</th>
+                  <th>Role</th>
+                  <th>Active Shift</th>
+                  <th>Base Wage</th>
+                  <th>Status</th>
+                  <th>Salary Records</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="employees-table-body">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ==================== 6. VIEW: POS BILLING ==================== -->
+      <div id="panel-billing" class="tab-panel">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title">POS Billing Station</h2>
+            <p style="color: var(--text-secondary); fontSize: 0.9rem;">
+              Process fuel transactions, lookup regular customer loyalty profiles, and print commercial thermal receipts
+            </p>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem;" class="charts-grid">
+          <!-- POS terminal form -->
+          <div class="card" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <h3 style="font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="calculator" style="color: var(--accent); width: 20px; height: 20px;"></i>
+              <span>Pump POS Terminal</span>
+            </h3>
+
+            <!-- Error banner -->
+            <div id="pos-error-banner" style="display: none; background-color: var(--danger-light); border: 1px solid var(--danger); padding: 0.8rem 1rem; border-radius: 8px; color: var(--danger); font-weight: 600; font-size: 0.85rem;"></div>
+
+            <form id="pos-billing-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
+              
+              <!-- Loyalty search card -->
+              <div style="padding: 1rem; border: 1px solid var(--border-color); border-radius: 10px; background-color: var(--bg-primary); display: flex; flex-direction: column; gap: 1rem;">
+                <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); display: flex; gap: 4px; align-items: center;">
+                  <i data-lucide="user" style="color: var(--accent); width: 15px; height: 15px;"></i>
+                  <span>Customer Loyalty Lookup (Optional)</span>
+                </h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Phone Number</label>
+                    <div style="position: relative;">
+                      <input id="pos-cust-phone" type="text" class="input-field" placeholder="e.g. 9876543210" style="padding-right: 2.5rem;" />
+                      <i data-lucide="search" style="position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 16px; height: 16px;"></i>
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Customer Name</label>
+                    <input id="pos-cust-name" type="text" class="input-field" placeholder="Walk-in Customer" />
+                  </div>
+                </div>
+
+                <!-- Live search warnings/rewards feedback -->
+                <div id="pos-loyalty-feedback" style="display: none; justify-content: space-between; align-items: center; background-color: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.8rem; color: var(--success);">
+                  <span style="font-weight: 600;">✅ Customer Enrolled!</span>
+                  <span style="font-weight: 700;">Points Balance: <span id="pos-loyalty-points-label">0</span></span>
+                </div>
+                <div id="pos-new-loyalty-feedback" style="display: none; background-color: var(--accent-light); border: 1px solid var(--accent); padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.8rem; color: var(--accent); font-weight: 600;">
+                  💡 Phone not registered. Submitting will auto-register them as a new customer!
+                </div>
+              </div>
+
+              <!-- Fuel selection -->
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label>Select Fuel Grade</label>
+                  <select id="pos-fuel-select" class="input-field" onchange="recalculatePosTotals()">
+                    <!-- Injected dynamically -->
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Quantity (Liters)</label>
+                  <input id="pos-liters" type="number" step="0.01" required class="input-field" placeholder="Liters" oninput="recalculatePosTotals()" />
+                </div>
+              </div>
+
+              <!-- Payment pathway and checkbox discount -->
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: center;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label>Payment Pathway</label>
+                  <div style="display: flex; gap: 0.5rem; marginTop: 4px;">
+                    <button type="button" id="paymode-Cash" class="btn btn-primary btn-sm" style="flex: 1;" onclick="setPosPaymode('Cash')">Cash</button>
+                    <button type="button" id="paymode-Card" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="setPosPaymode('Card')">Card</button>
+                    <button type="button" id="paymode-UPI" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="setPosPaymode('UPI')">UPI</button>
+                  </div>
+                </div>
+
+                <div id="pos-redeem-checkbox-container" style="display: none; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 600; color: var(--success); border: 1px solid var(--success); padding: 0.75rem; border-radius: 8px; cursor: pointer; margin-top: 20px;">
+                  <input id="pos-redeem-checkbox" type="checkbox" style="width: 16px; height: 16px;" onchange="recalculatePosTotals()" />
+                  <span>Redeem 100 Points (Save $5)</span>
+                </div>
+                <div id="pos-no-redeem-label" style="font-size: 0.75rem; color: var(--text-muted); border: 1px dashed var(--border-color); padding: 0.6rem; border-radius: 8px; margin-top: 20px; text-align: center;">
+                  Earns <span id="pos-projected-points">0</span> points with this transaction
+                </div>
+              </div>
+
+              <!-- Calculations Box -->
+              <div style="background-color: var(--bg-tertiary); border-radius: 8px; padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Gross Sales total:</span>
+                  <span id="pos-gross-total" style="font-weight: 600;">$0.00</span>
+                </div>
+                <div id="pos-discount-row" style="display: none; justify-content: space-between; color: var(--success); font-weight: 600;">
+                  <span>Loyalty Savings discount:</span>
+                  <span id="pos-discount-val">-$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 0.6rem; font-size: 1.1rem; font-weight: 800;">
+                  <span>Net Amount Due:</span>
+                  <span id="pos-net-due" style="color: var(--accent);">$0.00</span>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+                <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
+                <span>Process Pump & Complete Sale</span>
+              </button>
+
+            </form>
+          </div>
+
+          <!-- Thermal Receipt Card -->
+          <div class="card" style="display: flex; flex-direction: column; gap: 1.5rem; justify-content: flex-start; align-items: stretch;">
+            <div class="card-header">
+              <h3 class="card-title">Invoicing Receipt Preview</h3>
+              <button id="pos-print-btn" class="btn btn-secondary btn-sm" style="display: none; gap: 4px; align-items: center;" onclick="triggerReceiptPrint()">
+                <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                <span>Print Receipt</span>
+              </button>
+            </div>
+
+            <div id="print-area">
+              <!-- receipt mockup shell -->
+              <div id="pos-receipt-container" style="display: none; width: 100%;">
+                <div class="receipt-box">
+                  <div style="text-align: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+                    <h4 id="receipt-station-name" style="font-weight: 800; font-size: 1rem; text-transform: uppercase;">FUELFLOW APEX STATION</h4>
+                    <p style="font-size: 0.7rem; color: #64748b;">HIGHWAY OUTLET POS TERMINAL</p>
+                    <p id="receipt-station-hotline" style="font-size: 0.7rem; color: #64748b;">Ph: +1 (555) 019-9831</p>
+                  </div>
+
+                  <div style="font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; border-bottom: 1px dashed #cbd5e1; padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>INVOICE: <strong id="receipt-bill-no">TXN-000000</strong></div>
+                    <div>DATE: <span id="receipt-date">2026-05-26 12:00</span></div>
+                    <div>OPERATOR: <span id="receipt-operator">Station Director</span></div>
+                    <div>CUSTOMER: <span id="receipt-cust-name">Walk-in</span></div>
+                    <div id="receipt-cust-phone-row">PHONE: <span id="receipt-cust-phone">N/A</span></div>
+                  </div>
+
+                  <div style="font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; border-bottom: 1px dashed #cbd5e1; padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; font-weight: 700;">
+                      <span>DESCRIPTION</span>
+                      <span>TOTAL</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                      <span id="receipt-fuel-type">Petrol</span>
+                      <span id="receipt-calculations">0L @ $0/L</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-left: 1rem; color: #475569;">
+                      <span>Gross total:</span>
+                      <span id="receipt-gross-total">$0.00</span>
+                    </div>
+                    <div id="receipt-discount-row" style="display: none; justify-content: space-between; padding-left: 1rem; color: green; font-weight: 600;">
+                      <span>Loyalty discount:</span>
+                      <span id="receipt-discount-val">-$0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.85rem; margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
+                      <span>TOTAL PAID (<span id="receipt-paymode">Cash</span>):</span>
+                      <span id="receipt-net-paid">$0.00</span>
+                    </div>
+                  </div>
+
+                  <div style="font-size: 0.7rem; display: flex; flex-direction: column; gap: 0.25rem; text-align: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: center; margin: 4px 0;">
+                      <i data-lucide="qr-code" style="width: 40px; height: 40px; opacity: 0.8;"></i>
+                    </div>
+                    <p style="font-weight: 700;">LOYALTY POINTS SUMMARY</p>
+                    <p>Points Earned: +<span id="receipt-points-earned">0</span></p>
+                    <p id="receipt-updated-points-row">Updated Total: <span id="receipt-updated-points">0</span></p>
+                  </div>
+
+                  <div style="text-align: center; font-size: 0.7rem; font-style: italic;">
+                    <p>Thank you for refueling with us!</p>
+                    <p>Drive safe and see you again.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Standby Container -->
+            <div id="pos-standby-preview" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; border: 2px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); text-align: center; gap: 0.75rem;">
+              <i data-lucide="receipt" style="color: var(--border-color); width: 40px; height: 40px;"></i>
+              <div>
+                <p style="font-weight: 700; color: var(--text-secondary);">POS Invoicing Standby</p>
+                <p style="font-size: 0.8rem;">Complete pump parameters and trigger checkout to compile thermal tickets</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- ==================== 7. VIEW: SALES REPORTS ==================== -->
+      <div id="panel-reports" class="tab-panel">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title">Sales Reports & Registers</h2>
+            <p style="color: var(--text-secondary); fontSize: 0.9rem;">
+              Compile comprehensive sales ledgers, filter historical transitions, and generate exportable PDF report packets
+            </p>
+          </div>
+          <button id="report-pdf-export-btn" class="btn btn-primary" onclick="exportReportToPDF()">
+            <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+            <span>Export to PDF</span>
+          </button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>Timeframe Scope</label>
+            <select id="report-timeframe" class="input-field" style="width: 160px; padding: 0.6rem;" onchange="handleTimeframeChange()">
+              <option value="daily">Today (Daily)</option>
+              <option value="weekly">Last 7 Days (Weekly)</option>
+              <option value="monthly" selected>Last 30 Days (Monthly)</option>
+              <option value="custom">Custom Date Range</option>
+            </select>
+          </div>
+
+          <div id="report-custom-dates" style="display: none; gap: 1rem;">
+            <div class="filter-group">
+              <label>Start Date</label>
+              <input id="report-start-date" type="date" class="input-field" style="width: 150px; padding: 0.5rem;" onchange="fetchSalesReportData()" />
+            </div>
+            <div class="filter-group">
+              <label>End Date</label>
+              <input id="report-end-date" type="date" class="input-field" style="width: 150px; padding: 0.5rem;" onchange="fetchSalesReportData()" />
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Filter Fuel Grade</label>
+            <select id="report-fuel-filter" class="input-field" style="width: 200px; padding: 0.6rem;" onchange="fetchSalesReportData()">
+              <option value="">-- All Fuel Grades --</option>
+              <!-- Injected dynamically -->
+            </select>
+          </div>
+
+          <div class="filter-group" style="margin-left: auto; flex: 1; min-width: 220px;">
+            <label>Search Log Registers</label>
+            <div style="position: relative;">
+              <input id="report-search-query" type="text" class="input-field" placeholder="Search Bill No or Name..." style="padding: 0.6rem 1rem; padding-left: 2.5rem;" oninput="applyReportFilters()" />
+              <i data-lucide="search" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 16px; height: 16px;"></i>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary btn-sm" style="height: 38px; padding: 0 0.8rem; display: flex; align-items: center; gap: 4px;" onclick="fetchSalesReportData()">
+            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+            <span>Sync</span>
+          </button>
+        </div>
+
+        <!-- Filter Aggregates Row -->
+        <div class="dashboard-grid">
+          <div class="card kpi-card" style="border-left: 4px solid #22c55e;">
+            <div class="kpi-info">
+              <span class="kpi-label">Filtered Revenue</span>
+              <span id="rep-kpi-revenue" class="kpi-value" style="color: #22c55e;">$0.00</span>
+            </div>
+            <div class="kpi-icon-box" style="background-color: var(--success-light); color: #22c55e;">
+              <i data-lucide="dollar-sign" style="width: 20px; height: 20px;"></i>
+            </div>
+          </div>
+
+          <div class="card kpi-card" style="border-left: 4px solid #3b82f6;">
+            <div class="kpi-info">
+              <span class="kpi-label">Volume Sold</span>
+              <span id="rep-kpi-liters" class="kpi-value" style="color: #3b82f6;">0 L</span>
+            </div>
+            <div class="kpi-icon-box" style="background-color: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+              <i data-lucide="fuel" style="width: 20px; height: 20px;"></i>
+            </div>
+          </div>
+
+          <div class="card kpi-card" style="border-left: 4px solid #f97316;">
+            <div class="kpi-info">
+              <span class="kpi-label">Transactions Count</span>
+              <span id="rep-kpi-count" class="kpi-value" style="color: var(--accent);">0</span>
+            </div>
+            <div class="kpi-icon-box" style="background-color: var(--accent-light); color: var(--accent);">
+              <i data-lucide="trending-up" style="width: 20px; height: 20px;"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Log registers table card -->
+        <div class="card">
+          <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="file-text" style="color: var(--accent); width: 20px; height: 20px;"></i>
+            <span>Log Registers</span>
+          </h3>
+
+          <div class="table-container" style="margin-top: 0;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Bill Number</th>
+                  <th>Customer Profile</th>
+                  <th>Fuel Grade</th>
+                  <th>Liters Pumped</th>
+                  <th>Rate per L</th>
+                  <th>Discount</th>
+                  <th>Net Paid</th>
+                </tr>
+              </thead>
+              <tbody id="reports-table-body">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ==================== 8. VIEW: SETTINGS TAB ==================== -->
+      <div id="panel-settings" class="tab-panel">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title">Station Control Center</h2>
+            <p style="color: var(--text-secondary); fontSize: 0.9rem;">
+              Modify pump outlet parameters, update admin security credentials, and manage regular loyalty customer cards
+            </p>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem;" class="charts-grid">
+          
+          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Profiles status alerts -->
+            <div id="settings-success-alert" style="display: none; gap: 0.5rem; background-color: var(--success-light); border: 1px solid var(--success); padding: 0.8rem 1rem; border-radius: 8px; color: var(--success); font-weight: 600; font-size: 0.85rem;">
+              <i data-lucide="check-circle" style="width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px;"></i>
+              <span>Station and admin details updated successfully!</span>
+            </div>
+
+            <!-- Station and credentials form -->
+            <div class="card">
+              <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="settings-2" style="color: var(--accent); width: 20px; height: 20px;"></i>
+                <span>Station Details & Profile</span>
+              </h3>
+
+              <form id="settings-profile-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Pump Station Name</label>
+                    <input id="settings-pump-name" type="text" required class="input-field" />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Contact Hotline</label>
+                    <input id="settings-phone" type="text" required class="input-field" />
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label>Director Name</label>
+                  <input id="settings-admin-name" type="text" required class="input-field" />
+                </div>
+
+                <div style="margin: 1rem 0 0.5rem 0; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                  <h4 style="font-size: 0.9rem; font-weight: 700; display: flex; gap: 4px; align-items: center;">
+                    <i data-lucide="lock" style="color: var(--accent); width: 15px; height: 15px;"></i>
+                    <span>Update Password (Leave blank to keep current)</span>
+                  </h4>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>New Password</label>
+                    <input id="settings-password" type="password" class="input-field" placeholder="••••••••" />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Confirm Password</label>
+                    <input id="settings-confirm-password" type="password" class="input-field" placeholder="••••••••" />
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: fit-content; padding: 0.65rem 1.5rem; margin-top: 1rem;">
+                  Save Configuration
+                </button>
+              </form>
+            </div>
+
+            <!-- Theme Toggles -->
+            <div class="card">
+              <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="paint-brush" style="color: var(--accent); width: 20px; height: 20px;"></i>
+                <span>Theme Customization</span>
+              </h3>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.25rem;">Switch between corporate slate dark and elegant daylight business palettes</p>
+              
+              <div style="display: flex; gap: 1rem;">
+                <button type="button" id="theme-btn-light" class="btn btn-secondary" style="flex: 1; display: flex; gap: 8px; justify-content: center;" onclick="setThemeMode('light')">
+                  <i data-lucide="sun" style="width: 18px; height: 18px;"></i>
+                  <span>Light Mode</span>
+                </button>
+                <button type="button" id="theme-btn-dark" class="btn btn-primary" style="flex: 1; display: flex; gap: 8px; justify-content: center;" onclick="setThemeMode('dark')">
+                  <i data-lucide="moon" style="width: 18px; height: 18px;"></i>
+                  <span>Dark Mode</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loyalty Cardholders Registry -->
+          <div class="card" style="display: flex; flex-direction: column; gap: 1rem;">
+            <h3 style="font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="award" style="color: var(--accent); width: 20px; height: 20px;"></i>
+              <span>Regular Loyalty Cardholders</span>
+            </h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted);">Registered corporate clients earning gasoline point rebates</p>
+
+            <div class="table-container" style="margin-top: 0;">
+              <table class="data-table" style="font-size: 0.85rem;">
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Spent Total</th>
+                    <th>Loyalty Points</th>
+                  </tr>
+                </thead>
+                <tbody id="settings-customers-body">
+                  <!-- Injected dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top: auto; background-color: var(--bg-primary); border: 1px dashed var(--border-color); border-radius: 8px; padding: 0.75rem; display: flex; gap: 0.5rem; align-items: center;">
+              <i data-lucide="sparkles" style="color: var(--accent); flex-shrink: 0; width: 16px; height: 16px;"></i>
+              <span style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.3;">
+                Each cardholder accumulates 1 Loyalty Point for every $10 spent at pump. 100 points can be redeemed at checkout for $5 savings.
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ==================== 9. MODALS ==================== -->
+  
+  <!-- REFILL MODAL -->
+  <div id="modal-refill" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="refill-modal-title" style="font-weight: 700;">Refill Fuel</h3>
+        <button style="background: none; border: none; font-size: 1.2rem; color: var(--text-muted);" onclick="closeModal('modal-refill')">×</button>
+      </div>
+      <form id="refill-modal-form">
+        <input type="hidden" id="refill-fuel-id" />
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+          <p id="refill-modal-desc" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
+          <div class="form-group">
+            <label>Refill Quantity (Liters)</label>
+            <input id="refill-qty-input" type="number" required class="input-field" placeholder="e.g. 5000" min="1" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-refill')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Confirm Refill</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TANK CONFIG SETTINGS MODAL -->
+  <div id="modal-config-fuel" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="config-fuel-title" style="font-weight: 700;">Configure Tank settings</h3>
+        <button style="background: none; border: none; font-size: 1.2rem; color: var(--text-muted);" onclick="closeModal('modal-config-fuel')">×</button>
+      </div>
+      <form id="config-fuel-form">
+        <input type="hidden" id="config-fuel-id" />
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="form-group">
+            <label>Retail Price per Liter ($)</label>
+            <input id="config-price-input" type="number" step="0.01" required class="input-field" />
+          </div>
+          <div class="form-group">
+            <label>Maximum Tank Capacity (Liters)</label>
+            <input id="config-capacity-input" type="number" required class="input-field" />
+          </div>
+          <div class="form-group">
+            <label>Low Stock Alert Safety Threshold (Liters)</label>
+            <input id="config-threshold-input" type="number" required class="input-field" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-config-fuel')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- REGISTER NEW FUEL MODAL -->
+  <div id="modal-add-fuel" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-weight: 700;">Register New Fuel Grade</h3>
+        <button style="background: none; border: none; font-size: 1.2rem; color: var(--text-muted);" onclick="closeModal('modal-add-fuel')">×</button>
+      </div>
+      <form id="add-fuel-form">
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="form-group">
+            <label>Fuel Grade Name</label>
+            <input id="add-fuel-name" type="text" required class="input-field" placeholder="e.g. CNG Premium, Octane 98" />
+          </div>
+          <div class="form-group">
+            <label>Initial Price per Liter ($)</label>
+            <input id="add-fuel-price" type="number" step="0.01" required class="input-field" placeholder="e.g. 1.75" />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Tank Capacity (L)</label>
+              <input id="add-fuel-capacity" type="number" required class="input-field" placeholder="15000" />
+            </div>
+            <div class="form-group">
+              <label>Initial Quantity (L)</label>
+              <input id="add-fuel-available" type="number" required class="input-field" placeholder="10000" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Low Stock Warning Limit (L)</label>
+            <input id="add-fuel-threshold" type="number" class="input-field" placeholder="3000" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-add-fuel')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Register Fuel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- WAGE PAY MODAL -->
+  <div id="modal-pay-emp" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="pay-emp-title" style="font-weight: 700;">Record Wage Payment</h3>
+        <button style="background: none; border: none; font-size: 1.2rem; color: var(--text-muted);" onclick="closeModal('modal-pay-emp')">×</button>
+      </div>
+      <form id="pay-emp-form">
+        <input type="hidden" id="pay-emp-id" />
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; gap: 0.5rem; background-color: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); padding: 0.75rem; border-radius: 8px; color: var(--success);">
+            <i data-lucide="alert-circle" style="flex-shrink: 0; margin-top: 2px; width: 18px; height: 18px;"></i>
+            <p style="font-size: 0.8rem; line-height: 1.4;">
+              Signing this transaction logs a formal payroll ledger event. Standard wage tier: <strong id="pay-emp-salary-label">$0.00</strong>.
+            </p>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Disbursement Month</label>
+              <select id="pay-emp-month" required class="input-field">
+                <option value="">-- Select Month --</option>
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+                <option value="April">April</option>
+                <option value="May">May</option>
+                <option value="June">June</option>
+                <option value="July">July</option>
+                <option value="August">August</option>
+                <option value="September">September</option>
+                <option value="October">October</option>
+                <option value="November">November</option>
+                <option value="December">December</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Year</label>
+              <input id="pay-emp-year" type="number" required class="input-field" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Net Amount Paid ($)</label>
+            <input id="pay-emp-amount" type="number" required class="input-field" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-pay-emp')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Disburse Payroll</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD EMPLOYEE MODAL -->
+  <div id="modal-add-emp" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-weight: 700;">Onboard New Crew Member</h3>
+        <button style="background: none; border: none; font-size: 1.2rem; color: var(--text-muted);" onclick="closeModal('modal-add-emp')">×</button>
+      </div>
+      <form id="add-emp-form">
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input id="add-emp-name" type="text" required class="input-field" placeholder="e.g. Liam Sterling" />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Email</label>
+              <input id="add-emp-email" type="email" required class="input-field" placeholder="liam@gmail.com" />
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input id="add-emp-phone" type="text" required class="input-field" placeholder="+1 (555) 012-4567" />
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Assign Role</label>
+              <select id="add-emp-role" class="input-field">
+                <option value="Attendant">Attendant</option>
+                <option value="Operator">Operator</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="Manager">Manager</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Shift Schedule</label>
+              <select id="add-emp-shift" class="input-field">
+                <option value="Morning">Morning (06:00 - 14:00)</option>
+                <option value="Afternoon">Afternoon (14:00 - 22:00)</option>
+                <option value="Night">Night (22:00 - 06:00)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Monthly Base Salary ($)</label>
+            <input id="add-emp-salary" type="number" required class="input-field" placeholder="e.g. 18000" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-add-emp')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Onboard Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT EMPLOYEE DETAILS MODAL -->
+  <div id="modal-edit-emp" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-weight: 700;">Edit Crew Details</h3>
+        <button style="background: none; border: none; font-size: 1.2rem; color: var(--text-muted);" onclick="closeModal('modal-edit-emp')">×</button>
+      </div>
+      <form id="edit-emp-form">
+        <input type="hidden" id="edit-emp-id" />
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input id="edit-emp-name" type="text" required class="input-field" />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Email Address</label>
+              <input id="edit-emp-email" type="email" required class="input-field" />
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input id="edit-emp-phone" type="text" required class="input-field" />
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Assign Role</label>
+              <select id="edit-emp-role" class="input-field">
+                <option value="Attendant">Attendant</option>
+                <option value="Operator">Operator</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="Manager">Manager</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Work Shift</label>
+              <select id="edit-emp-shift" class="input-field">
+                <option value="Morning">Morning</option>
+                <option value="Afternoon">Afternoon</option>
+                <option value="Night">Night</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Monthly Base Salary ($)</label>
+              <input id="edit-emp-salary" type="number" required class="input-field" />
+            </div>
+            <div class="form-group">
+              <label>Roster Status</label>
+              <select id="edit-emp-status" class="input-field">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-edit-emp')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Profiles</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ==================== 10. JAVASCRIPT LOGIC ENGINE ==================== -->
+  <script>
+    // ==================== A. DATABASE MANAGER & SEEDER ====================
+    
+    // Check local storage records. Seed if empty
+    function initializeMockDatabase() {
+      // 1. Seed admin credentials
+      if (!localStorage.getItem('users')) {
+        const defaultAdmin = [{
+          _id: 'admin-001',
+          name: 'Station Director',
+          email: 'admin@fuelflow.com',
+          password: 'admin123', // Simple plaintext for local check mockup
+          role: 'admin',
+          phone: '+1 (555) 019-9831',
+          pumpName: 'FuelFlow Apex Station'
+        }];
+        localStorage.setItem('users', JSON.stringify(defaultAdmin));
+      }
+
+      // 2. Seed fuel inventory
+      if (!localStorage.getItem('fuel_stock')) {
+        const defaultFuel = [
+          { _id: 'f-1', fuelType: 'Petrol (Octane 91)', capacity: 15000, available: 12400, pricePerLiter: 1.45, lowStockThreshold: 3000 },
+          { _id: 'f-2', fuelType: 'Petrol (Octane 95)', capacity: 15000, available: 8900, pricePerLiter: 1.62, lowStockThreshold: 3000 },
+          { _id: 'f-3', fuelType: 'Diesel (EcoShield)', capacity: 20000, available: 16500, pricePerLiter: 1.38, lowStockThreshold: 4000 },
+          { _id: 'f-4', fuelType: 'CNG (CleanGas)', capacity: 10000, available: 1800, pricePerLiter: 0.95, lowStockThreshold: 2000 } // Preseed in warning limit!
+        ];
+        localStorage.setItem('fuel_stock', JSON.stringify(defaultFuel));
+      }
+
+      // 3. Seed employees roster
+      if (!localStorage.getItem('employees')) {
+        const defaultCrew = [
+          { _id: 'e-1', name: 'Arjun Mehta', email: 'arjun@fuelflow.com', phone: '+91 98765 43210', role: 'Operator', shift: 'Morning', salary: 18000, status: 'Active', salaryRecords: [] },
+          { _id: 'e-2', name: 'Sarah Jenkins', email: 'sarah@fuelflow.com', phone: '+1 (555) 012-3456', role: 'Attendant', shift: 'Afternoon', salary: 15000, status: 'Active', salaryRecords: [] },
+          { _id: 'e-3', name: 'Marcus Vance', email: 'marcus@fuelflow.com', phone: '+1 (555) 765-4321', role: 'Manager', shift: 'Morning', salary: 32000, status: 'Active', salaryRecords: [] },
+          { _id: 'e-4', name: 'David Kojo', email: 'david@fuelflow.com', phone: '+233 24 123 4567', role: 'Attendant', shift: 'Night', salary: 16500, status: 'Active', salaryRecords: [] }
+        ];
+        localStorage.setItem('employees', JSON.stringify(defaultCrew));
+      }
+
+      // 4. Seed customers profiles
+      if (!localStorage.getItem('customers')) {
+        const defaultCust = [
+          { _id: 'c-1', name: 'Sumit Sharma', phone: '9876543210', email: 'sumit@gmail.com', loyaltyPoints: 245, totalPurchases: 2450.0 },
+          { _id: 'c-2', name: 'Priya Patel', phone: '9821234567', email: 'priya.p@outlook.com', loyaltyPoints: 110, totalPurchases: 1100.5 },
+          { _id: 'c-3', name: 'Rajesh Kumar', phone: '9123456780', email: 'rajesh.kumar@yahoo.com', loyaltyPoints: 85, totalPurchases: 850.2 },
+          { _id: 'c-4', name: 'Anita Singh', phone: '9321456789', email: 'anita.singh@gmail.com', loyaltyPoints: 310, totalPurchases: 3100.8 }
+        ];
+        localStorage.setItem('customers', JSON.stringify(defaultCust));
+      }
+
+      // 5. Seed sales transactions
+      if (!localStorage.getItem('transactions')) {
+        const fuelGrades = ['Petrol (Octane 91)', 'Petrol (Octane 95)', 'Diesel (EcoShield)', 'CNG (CleanGas)'];
+        const payModes = ['Cash', 'Card', 'UPI'];
+        const customerProfiles = [
+          { name: 'Sumit Sharma', phone: '9876543210' },
+          { name: 'Priya Patel', phone: '9821234567' },
+          { name: 'Rajesh Kumar', phone: '9123456780' },
+          { name: 'Anita Singh', phone: '9321456789' },
+          { name: 'Walk-in Customer', phone: '' }
+        ];
+        
+        const seededTxns = [];
+        const now = new Date();
+
+        // Populate beautiful fluctuating sales trends across past 30 days
+        for (let d = 30; d >= 0; d--) {
+          const currentDate = new Date();
+          currentDate.setDate(now.getDate() - d);
+          const txnTodayCount = Math.floor(Math.random() * 3) + 2; // 2 to 4 transactions per day
+
+          for (let i = 0; i < txnTodayCount; i++) {
+            const fuelType = fuelGrades[Math.floor(Math.random() * fuelGrades.length)];
+            const liters = Math.floor(Math.random() * 45) + 5; // 5 to 50 Liters
+            
+            // Set mock rates matching original seed
+            let rate = 1.45;
+            if (fuelType.includes('95')) rate = 1.62;
+            else if (fuelType.includes('Diesel')) rate = 1.38;
+            else if (fuelType.includes('CNG')) rate = 0.95;
+
+            const total = parseFloat((liters * rate).toFixed(2));
+            const discount = Math.random() > 0.85 ? 5 : 0;
+            const net = parseFloat((total - discount).toFixed(2));
+            const paymode = payModes[Math.floor(Math.random() * payModes.length)];
+            const cust = customerProfiles[Math.floor(Math.random() * customerProfiles.length)];
+
+            const dateWithHours = new Date(currentDate);
+            dateWithHours.setHours(Math.floor(Math.random() * 12) + 8, Math.floor(Math.random() * 60)); // business hours
+
+            const billNo = `TXN-${dateWithHours.getFullYear().toString().slice(-2)}${(dateWithHours.getMonth()+1).toString().padStart(2,'0')}${dateWithHours.getDate().toString().padStart(2,'0')}-${Math.floor(1000 + Math.random()*9000)}`;
+
+            seededTxns.push({
+              _id: 't-' + Math.random().toString(36).substring(2, 9),
+              billNo,
+              customerName: cust.name,
+              customerPhone: cust.phone,
+              fuelType,
+              liters,
+              pricePerLiter: rate,
+              totalAmount: total,
+              discountAmount: discount,
+              netAmount: net,
+              paymentMode: paymode,
+              loyaltyPointsEarned: Math.floor(net / 10),
+              date: dateWithHours.toISOString()
+            });
+          }
+        }
+
+        localStorage.setItem('transactions', JSON.stringify(seededTxns));
+      }
+    }
+
+    // Helper functions to fetch raw arrays
+    const db = {
+      users: () => JSON.parse(localStorage.getItem('users') || '[]'),
+      fuel: () => JSON.parse(localStorage.getItem('fuel_stock') || '[]'),
+      employees: () => JSON.parse(localStorage.getItem('employees') || '[]'),
+      customers: () => JSON.parse(localStorage.getItem('customers') || '[]'),
+      transactions: () => JSON.parse(localStorage.getItem('transactions') || '[]'),
+      
+      save: (table, data) => localStorage.setItem(table, JSON.stringify(data))
+    };
+
+    // ==================== B. GLOBAL APP VARIABLES & TAB CONTROL ====================
+    let activeUser = null;
+    let currentTheme = 'dark';
+    let currentTab = 'dashboard';
+    let selectedPaymode = 'Cash';
+    let revenueChart = null;
+    let fuelChart = null;
+    let reportsSalesData = null;
+
+    // Run Tab Swaps
+    function navigateTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+      });
+      document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.remove('active');
+      });
+
+      const activePanel = document.getElementById(`panel-${tabId}`);
+      if (activePanel) activePanel.classList.add('active');
+
+      // Style active menu link
+      const links = document.querySelectorAll('.sidebar-link');
+      links.forEach(l => {
+        if (l.getAttribute('onclick').includes(tabId)) {
+          l.classList.add('active');
+        }
+      });
+
+      // Render tab data specifically
+      if (tabId === 'dashboard') renderDashboardTab();
+      else if (tabId === 'fuel') renderFuelTab();
+      else if (tabId === 'employees') renderEmployeesTab();
+      else if (tabId === 'billing') renderBillingTab();
+      else if (tabId === 'reports') renderReportsTab();
+      else if (tabId === 'settings') renderSettingsTab();
+
+      // Close mobile sidebar menu automatically
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) sidebar.classList.remove('open');
+    }
+
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    // ==================== C. AUTHENTICATION CONTROLLER ====================
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const password = document.getElementById('login-password').value;
+      const errorBanner = document.getElementById('login-error');
+
+      errorBanner.style.display = 'none';
+
+      const users = db.users();
+      const match = users.find(u => u.email === email && u.password === password);
+
+      if (match) {
+        // Authenticated! Save session
+        activeUser = match;
+        sessionStorage.setItem('active_session', JSON.stringify(match));
+        bootAppShell();
+      } else {
+        errorBanner.style.display = 'flex';
+        document.getElementById('login-error-text').innerText = 'Invalid email or password credentials.';
+      }
+    });
+
+    function handleLogout() {
+      sessionStorage.removeItem('active_session');
+      activeUser = null;
+      document.getElementById('app-view').style.display = 'none';
+      document.getElementById('login-view').style.display = 'flex';
+      
+      // Clear charts to rebuild on next login
+      if (revenueChart) { revenueChart.destroy(); revenueChart = null; }
+      if (fuelChart) { fuelChart.destroy(); fuelChart = null; }
+    }
+
+    function checkAuthSession() {
+      const storedSession = sessionStorage.getItem('active_session');
+      if (storedSession) {
+        activeUser = JSON.parse(storedSession);
+        bootAppShell();
+      } else {
+        document.getElementById('app-view').style.display = 'none';
+        document.getElementById('login-view').style.display = 'flex';
+      }
+    }
+
+    function bootAppShell() {
+      document.getElementById('login-view').style.display = 'none';
+      document.getElementById('app-view').style.display = 'block';
+
+      // Update sidebar / headers names
+      document.getElementById('admin-sidebar-name').innerText = activeUser.name;
+      document.getElementById('admin-sidebar-pump').innerText = activeUser.pumpName;
+      document.getElementById('header-admin-name').innerText = activeUser.name;
+      document.getElementById('header-pump-name').innerText = activeUser.pumpName;
+      document.getElementById('admin-avatar').innerText = activeUser.name.charAt(0).toUpperCase();
+
+      // Perform low stock checks
+      checkLowInventoryAlerts();
+
+      // Go to dashboard
+      navigateTab('dashboard');
+    }
+
+    function checkLowInventoryAlerts() {
+      const fuels = db.fuel();
+      const lowTanks = fuels.filter(f => f.available <= f.lowStockThreshold);
+      
+      const alertHeader = document.getElementById('low-stock-alert-header');
+      const criticalBanner = document.getElementById('low-stock-critical-banner');
+      const dot = document.getElementById('notification-dot');
+
+      if (lowTanks.length > 0) {
+        alertHeader.style.display = 'block';
+        dot.style.display = 'block';
+        document.getElementById('low-stock-alert-header-text').innerText = `${lowTanks.length} LOW TANK ALERT`;
+        
+        criticalBanner.style.display = 'flex';
+        document.getElementById('low-stock-banner-text').innerHTML = `
+          The following fuel grades have dropped beneath safe warning guidelines: 
+          <strong>${lowTanks.map(lt => `${lt.fuelType} (${lt.available.toFixed(0)}L)`).join(', ')}</strong>.
+        `;
+      } else {
+        alertHeader.style.display = 'none';
+        dot.style.display = 'none';
+        criticalBanner.style.display = 'none';
+      }
+    }
+
+    // ==================== D. LIGHT/DARK THEME TOGGLE ====================
+    function handleThemeToggle() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const nextTheme = current === 'dark' ? 'light' : 'dark';
+      setThemeMode(nextTheme);
+    }
+
+    function setThemeMode(mode) {
+      document.documentElement.setAttribute('data-theme', mode);
+      currentTheme = mode;
+      
+      const icon = document.getElementById('theme-btn-icon');
+      if (mode === 'dark') {
+        icon.setAttribute('data-lucide', 'sun');
+        document.getElementById('theme-btn-dark').className = 'btn btn-primary';
+        document.getElementById('theme-btn-light').className = 'btn btn-secondary';
+      } else {
+        icon.setAttribute('data-lucide', 'moon');
+        document.getElementById('theme-btn-dark').className = 'btn btn-secondary';
+        document.getElementById('theme-btn-light').className = 'btn btn-primary';
+      }
+      lucide.createIcons();
+
+      // Re-trigger Chart grid line adjustments on color change
+      if (currentTab === 'dashboard') {
+        renderDashboardCharts();
+      }
+    }
+
+
+    // ==================== E. DASHBOARD TAB RENDERING ====================
+    function renderDashboardTab() {
+      document.getElementById('dash-greeting-name').innerText = activeUser.name;
+      
+      const txns = db.transactions();
+      const fuels = db.fuel();
+      const crew = db.employees().filter(e => e.status === 'Active');
+
+      // 1. KPI aggregates calculations
+      let totalRevenue = 0;
+      let dailyRevenue = 0;
+      const todayString = new Date().toDateString();
+
+      txns.forEach(t => {
+        totalRevenue += t.netAmount;
+        if (new Date(t.date).toDateString() === todayString) {
+          dailyRevenue += t.netAmount;
+        }
+      });
+
+      let totalStock = fuels.reduce((acc, curr) => acc + curr.available, 0);
+
+      document.getElementById('kpi-revenue').innerText = `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('kpi-stock').innerText = `${totalStock.toLocaleString(undefined, { maximumFractionDigits: 0 })} L`;
+      document.getElementById('kpi-daily').innerText = `$${dailyRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('kpi-crew').innerText = `${crew.length} Active`;
+
+      // 2. Render recent 5 transactions
+      const recentTxns = [...txns].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+      const recentBody = document.getElementById('dashboard-recent-txns-body');
+      recentBody.innerHTML = '';
+
+      recentTxns.forEach(txn => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td style="font-weight: 700; font-family: monospace; color: var(--text-secondary);">${txn.billNo}</td>
+          <td>
+            <p style="font-weight: 600;">${txn.customerName}</p>
+            ${txn.customerPhone ? `<p style="font-size: 0.75rem; color: var(--text-muted);">${txn.customerPhone}</p>` : ''}
+          </td>
+          <td><span class="badge" style="background-color: var(--primary-light); color: var(--text-primary);">${txn.fuelType}</span></td>
+          <td style="font-weight: 500;">${txn.liters.toFixed(2)}L</td>
+          <td>
+            <span class="badge" style="
+              background-color: ${txn.paymentMode === 'UPI' ? 'rgba(59, 130, 246, 0.1)' : txn.paymentMode === 'Card' ? 'rgba(168, 85, 247, 0.1)' : 'rgba(34, 197, 94, 0.1)'};
+              color: ${txn.paymentMode === 'UPI' ? '#3b82f6' : txn.paymentMode === 'Card' ? '#a855f7' : '#22c55e'};
+              font-weight: 700;
+            ">${txn.paymentMode}</span>
+          </td>
+          <td style="font-weight: 700; color: var(--accent);">$${txn.netAmount.toFixed(2)}</td>
+        `;
+        recentBody.appendChild(row);
+      });
+
+      // 3. Render charts
+      renderDashboardCharts();
+      checkLowInventoryAlerts();
+    }
+
+    function renderDashboardCharts() {
+      const txns = db.transactions();
+      const fuels = db.fuel();
+
+      // Group weekly sales trend line (Last 7 Operating Days)
+      const weeklyLabels = [];
+      const weeklyData = [];
+      const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        d.setHours(0,0,0,0);
+
+        let sum = 0;
+        txns.forEach(t => {
+          const txnDate = new Date(t.date);
+          txnDate.setHours(0,0,0,0);
+          if (txnDate.getTime() === d.getTime()) {
+            sum += t.netAmount;
+          }
+        });
+
+        weeklyLabels.push(weeklyLabels.push(weekdayNames[d.getDay()]));
+        weeklyData.push(parseFloat(sum.toFixed(2)));
+      }
+
+      // Re-trigger Line Chart
+      const lineCtx = document.getElementById('revenueLineChart').getContext('2d');
+      if (revenueChart) revenueChart.destroy();
+      
+      revenueChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+          labels: weeklyLabels.slice(-7), // Ensure only 7 items
+          datasets: [{
+            label: 'Daily Revenue ($)',
+            data: weeklyData.slice(-7),
+            borderColor: '#f97316',
+            backgroundColor: 'rgba(249, 115, 22, 0.15)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#ea580c',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#6b7280', font: { family: 'Outfit' } } },
+            y: { grid: { color: 'rgba(107, 114, 128, 0.1)' }, ticks: { color: '#6b7280', font: { family: 'Outfit' } } }
+          }
+        }
+      });
+
+      // Fuel Ratios Doughnut Chart
+      const doughnutCtx = document.getElementById('fuelDoughnutChart').getContext('2d');
+      if (fuelChart) fuelChart.destroy();
+
+      fuelChart = new Chart(doughnutCtx, {
+        type: 'doughnut',
+        data: {
+          labels: fuels.map(f => f.fuelType),
+          datasets: [{
+            data: fuels.map(f => f.available),
+            backgroundColor: ['#3b82f6', '#1d4ed8', '#f97316', '#10b981'],
+            borderWidth: 2,
+            borderColor: currentTheme === 'dark' ? '#111827' : '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: currentTheme === 'dark' ? '#d1d5db' : '#475569', font: { family: 'Outfit', size: 11, weight: '500' } }
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+
+    // ==================== F. FUEL STOCK RENDERING & ACTIONS ====================
+    function renderFuelTab() {
+      const fuels = db.fuel();
+      const grid = document.getElementById('fuel-tanks-grid');
+      grid.innerHTML = '';
+
+      fuels.forEach(fuel => {
+        const percentage = (fuel.available / fuel.capacity) * 100;
+        const isLow = fuel.available <= fuel.lowStockThreshold;
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.gap = '1.25rem';
+        if (isLow) card.style.border = '1.5px solid var(--danger)';
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <div style="width: 40px; height: 40px; border-radius: 8px; background-color: ${isLow ? 'var(--danger-light)' : 'rgba(59, 130, 246, 0.15)'}; color: ${isLow ? 'var(--danger)' : '#3b82f6'}; display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="fuel" style="width: 20px; height: 20px;"></i>
+              </div>
+              <div>
+                <h4 style="font-weight: 700; font-size: 1rem;">${fuel.fuelType}</h4>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Price per Liter</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+              <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--accent);">$${fuel.pricePerLiter.toFixed(2)}</h3>
+              ${isLow ? `<span class="badge badge-danger" style="font-size: 0.6rem; margin-top: 4px; display: inline-flex; gap: 2px; align-items: center;"><i data-lucide="alert-triangle" style="width:10px; height:10px;"></i> LOW STOCK</span>` : ''}
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600;">
+              <span style="color: var(--text-secondary);">Tank Level: ${percentage.toFixed(0)}%</span>
+              <span style="color: var(--text-primary);">${fuel.available.toLocaleString(undefined, { maximumFractionDigits: 0 })} / ${fuel.capacity.toLocaleString()} L</span>
+            </div>
+            <div style="width: 100%; height: 12px; background-color: var(--bg-tertiary); border-radius: 9999px; overflow: hidden;">
+              <div style="width: ${percentage}%; height: 100%; background-color: ${isLow ? 'var(--danger)' : percentage < 40 ? 'var(--warning)' : 'var(--success)'}; border-radius: 9999px; transition: width 0.8s ease;"></div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); background-color: var(--bg-primary); padding: 0.6rem 0.8rem; border-radius: var(--radius-sm);">
+            <span>Safety Limit: ${fuel.lowStockThreshold.toLocaleString()} L</span>
+            <span>Refill Needed: ${Math.max(0, fuel.capacity - fuel.available).toLocaleString(undefined, { maximumFractionDigits: 0 })} L</span>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+            <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="openRefillModal('${fuel._id}')">
+              <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i><span>Refill Tank</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="openConfigFuelModal('${fuel._id}')">
+              <i data-lucide="settings-2" style="width: 14px; height: 14px;"></i><span>Settings</span>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    // Modal Helpers
+    function openModal(modalId) {
+      document.getElementById(modalId).style.display = 'flex';
+    }
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Refill actions
+    function openRefillModal(fuelId) {
+      const fuels = db.fuel();
+      const match = fuels.find(f => f._id === fuelId);
+      if (!match) return;
+
+      document.getElementById('refill-fuel-id').value = fuelId;
+      document.getElementById('refill-modal-title').innerText = `Refill ${match.fuelType}`;
+      document.getElementById('refill-modal-desc').innerHTML = `
+        Record bulk supplier fuel shipment addition. Available capacity in tank: 
+        <strong>${(match.capacity - match.available).toLocaleString()} Liters</strong>.
+      `;
+      document.getElementById('refill-qty-input').max = match.capacity - match.available;
+      document.getElementById('refill-qty-input').value = '';
+      openModal('modal-refill');
+    }
+
+    document.getElementById('refill-modal-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const fuelId = document.getElementById('refill-fuel-id').value;
+      const quantity = Number(document.getElementById('refill-qty-input').value);
+
+      const fuels = db.fuel();
+      const matchIdx = fuels.findIndex(f => f._id === fuelId);
+
+      if (matchIdx !== -1) {
+        fuels[matchIdx].available = Math.min(fuels[matchIdx].capacity, fuels[matchIdx].available + quantity);
+        db.save('fuel_stock', fuels);
+        closeModal('modal-refill');
+        renderFuelTab();
+        checkLowInventoryAlerts();
+      }
+    });
+
+    // Config Action
+    function openConfigFuelModal(fuelId) {
+      const fuels = db.fuel();
+      const match = fuels.find(f => f._id === fuelId);
+      if (!match) return;
+
+      document.getElementById('config-fuel-id').value = fuelId;
+      document.getElementById('config-fuel-title').innerText = `Adjust ${match.fuelType} Settings`;
+      document.getElementById('config-price-input').value = match.pricePerLiter;
+      document.getElementById('config-capacity-input').value = match.capacity;
+      document.getElementById('config-threshold-input').value = match.lowStockThreshold;
+
+      openModal('modal-config-fuel');
+    }
+
+    document.getElementById('config-fuel-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const fuelId = document.getElementById('config-fuel-id').value;
+      const price = Number(document.getElementById('config-price-input').value);
+      const capacity = Number(document.getElementById('config-capacity-input').value);
+      const threshold = Number(document.getElementById('config-threshold-input').value);
+
+      const fuels = db.fuel();
+      const idx = fuels.findIndex(f => f._id === fuelId);
+
+      if (idx !== -1) {
+        fuels[idx].pricePerLiter = price;
+        fuels[idx].capacity = capacity;
+        fuels[idx].lowStockThreshold = threshold;
+        
+        db.save('fuel_stock', fuels);
+        closeModal('modal-config-fuel');
+        renderFuelTab();
+        checkLowInventoryAlerts();
+      }
+    });
+
+    // Add Fuel submit
+    document.getElementById('add-fuel-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('add-fuel-name').value.trim();
+      const price = Number(document.getElementById('add-fuel-price').value);
+      const capacity = Number(document.getElementById('add-fuel-capacity').value);
+      const available = Number(document.getElementById('add-fuel-available').value);
+      const threshold = Number(document.getElementById('add-fuel-threshold').value || 2000);
+
+      const fuels = db.fuel();
+      const newFuel = {
+        _id: 'f-' + Math.random().toString(36).substring(2, 9),
+        fuelType: name,
+        capacity,
+        available: Math.min(capacity, available),
+        pricePerLiter: price,
+        lowStockThreshold: threshold
+      };
+
+      fuels.push(newFuel);
+      db.save('fuel_stock', fuels);
+      closeModal('modal-add-fuel');
+      
+      // Reset form fields
+      document.getElementById('add-fuel-name').value = '';
+      document.getElementById('add-fuel-price').value = '';
+      document.getElementById('add-fuel-capacity').value = '';
+      document.getElementById('add-fuel-available').value = '';
+      document.getElementById('add-fuel-threshold').value = '';
+      
+      renderFuelTab();
+      checkLowInventoryAlerts();
+    });
+
+
+    // ==================== G. EMPLOYEE TAB RENDERING & SHIFTS ====================
+    function renderEmployeesTab() {
+      const crew = db.employees();
+
+      // Render Shifts scheduler rosters
+      const morningList = document.getElementById('shift-morning-list');
+      const afternoonList = document.getElementById('shift-afternoon-list');
+      const nightList = document.getElementById('shift-night-list');
+
+      morningList.innerHTML = '';
+      afternoonList.innerHTML = '';
+      nightList.innerHTML = '';
+
+      const activeCrew = crew.filter(e => e.status === 'Active');
+
+      activeCrew.forEach(emp => {
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.style.backgroundColor = 'var(--bg-primary)';
+        item.style.padding = '0.6rem 0.8rem';
+        item.style.borderRadius = '8px';
+        item.innerHTML = `
+          <span style="font-size:0.9rem; font-weight: 600;">${emp.name}</span>
+          <span style="font-size: 0.75rem; background-color: var(--primary-light); padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700;">${emp.role}</span>
+        `;
+
+        if (emp.shift === 'Morning') morningList.appendChild(item);
+        else if (emp.shift === 'Afternoon') afternoonList.appendChild(item);
+        else if (emp.shift === 'Night') nightList.appendChild(item);
+      });
+
+      // Show placeholders if empty
+      if (morningList.children.length === 0) morningList.innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted); font-style:italic;">No crew assigned</p>';
+      if (afternoonList.children.length === 0) afternoonList.innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted); font-style:italic;">No crew assigned</p>';
+      if (nightList.children.length === 0) nightList.innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted); font-style:italic;">No crew assigned</p>';
+
+      // Render Register Directory Table
+      const tbody = document.getElementById('employees-table-body');
+      tbody.innerHTML = '';
+
+      crew.forEach(emp => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <p style="font-weight: 600;">${emp.name}</p>
+            <p style="font-size: 0.75rem; color: var(--text-muted);">${emp.email} • ${emp.phone}</p>
+          </td>
+          <td style="font-weight: 500;">${emp.role}</td>
+          <td>
+            <span class="badge" style="
+              background-color: ${emp.shift === 'Morning' ? 'rgba(59, 130, 246, 0.1)' : emp.shift === 'Afternoon' ? 'rgba(249, 115, 22, 0.1)' : 'rgba(168, 85, 247, 0.1)'};
+              color: ${emp.shift === 'Morning' ? '#3b82f6' : emp.shift === 'Afternoon' ? '#f97316' : '#a855f7'};
+              font-weight: 700;
+            ">${emp.shift}</span>
+          </td>
+          <td style="font-weight: 700;">$${emp.salary.toLocaleString()}/mo</td>
+          <td><span class="badge ${emp.status === 'Active' ? 'badge-success' : 'badge-danger'}">${emp.status}</span></td>
+          <td><span style="font-size: 0.8rem; font-weight: 600;">${emp.salaryRecords ? emp.salaryRecords.length : 0} Paid</span></td>
+          <td style="text-align: right;">
+            <div style="display: inline-flex; gap: 0.4rem;">
+              <button class="btn btn-secondary btn-sm" style="display:flex; gap:4px; align-items:center; padding: 0.3rem 0.6rem;" onclick="openPaySalaryModal('${emp._id}')">
+                <i data-lucide="dollar-sign" style="width:13px; height:13px;"></i><span>Pay</span>
+              </button>
+              <button class="btn btn-secondary btn-sm" style="padding: 0.3rem 0.5rem;" onclick="openEditEmpModal('${emp._id}')">
+                <i data-lucide="edit-2" style="width:13px; height:13px;"></i>
+              </button>
+              <button class="btn btn-danger btn-sm" style="padding: 0.3rem 0.5rem;" onclick="handleDeleteEmployee('${emp._id}')">
+                <i data-lucide="trash-2" style="width:13px; height:13px;"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    // Add Employee Submit
+    document.getElementById('add-emp-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('add-emp-name').value.trim();
+      const email = document.getElementById('add-emp-email').value.trim();
+      const phone = document.getElementById('add-emp-phone').value.trim();
+      const role = document.getElementById('add-emp-role').value;
+      const shift = document.getElementById('add-emp-shift').value;
+      const salary = Number(document.getElementById('add-emp-salary').value);
+
+      const crew = db.employees();
+      const newEmp = {
+        _id: 'e-' + Math.random().toString(36).substring(2, 9),
+        name, email, phone, role, shift, salary,
+        status: 'Active',
+        salaryRecords: []
+      };
+
+      crew.push(newEmp);
+      db.save('employees', crew);
+      closeModal('modal-add-emp');
+
+      // Reset fields
+      document.getElementById('add-emp-name').value = '';
+      document.getElementById('add-emp-email').value = '';
+      document.getElementById('add-emp-phone').value = '';
+      document.getElementById('add-emp-salary').value = '';
+
+      renderEmployeesTab();
+    });
+
+    // Delete Employee Action
+    function handleDeleteEmployee(empId) {
+      if (confirm('Are you absolutely sure you want to delete this crew record?')) {
+        const crew = db.employees();
+        const filtered = crew.filter(e => e._id !== empId);
+        db.save('employees', filtered);
+        renderEmployeesTab();
+      }
+    }
+
+    // Edit Employee Modal
+    function openEditEmpModal(empId) {
+      const crew = db.employees();
+      const match = crew.find(e => e._id === empId);
+      if (!match) return;
+
+      document.getElementById('edit-emp-id').value = empId;
+      document.getElementById('edit-emp-name').value = match.name;
+      document.getElementById('edit-emp-email').value = match.email;
+      document.getElementById('edit-emp-phone').value = match.phone;
+      document.getElementById('edit-emp-role').value = match.role;
+      document.getElementById('edit-emp-shift').value = match.shift;
+      document.getElementById('edit-emp-salary').value = match.salary;
+      document.getElementById('edit-emp-status').value = match.status;
+
+      openModal('modal-edit-emp');
+    }
+
+    document.getElementById('edit-emp-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const empId = document.getElementById('edit-emp-id').value;
+      
+      const crew = db.employees();
+      const idx = crew.findIndex(e => e._id === empId);
+
+      if (idx !== -1) {
+        crew[idx].name = document.getElementById('edit-emp-name').value.trim();
+        crew[idx].email = document.getElementById('edit-emp-email').value.trim();
+        crew[idx].phone = document.getElementById('edit-emp-phone').value.trim();
+        crew[idx].role = document.getElementById('edit-emp-role').value;
+        crew[idx].shift = document.getElementById('edit-emp-shift').value;
+        crew[idx].salary = Number(document.getElementById('edit-emp-salary').value);
+        crew[idx].status = document.getElementById('edit-emp-status').value;
+
+        db.save('employees', crew);
+        closeModal('modal-edit-emp');
+        renderEmployeesTab();
+      }
+    });
+
+    // Wage Payment modal opens
+    function openPaySalaryModal(empId) {
+      const crew = db.employees();
+      const match = crew.find(e => e._id === empId);
+      if (!match) return;
+
+      document.getElementById('pay-emp-id').value = empId;
+      document.getElementById('pay-emp-salary-label').innerText = `$${match.salary.toLocaleString()}`;
+      document.getElementById('pay-emp-amount').value = match.salary;
+      document.getElementById('pay-emp-year').value = new Date().getFullYear();
+      document.getElementById('pay-emp-month').value = '';
+
+      openModal('modal-pay-emp');
+    }
+
+    document.getElementById('pay-emp-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const empId = document.getElementById('pay-emp-id').value;
+      const month = document.getElementById('pay-emp-month').value;
+      const year = Number(document.getElementById('pay-emp-year').value);
+      const amount = Number(document.getElementById('pay-emp-amount').value);
+
+      const crew = db.employees();
+      const idx = crew.findIndex(e => e._id === empId);
+
+      if (idx !== -1) {
+        if (!crew[idx].salaryRecords) crew[idx].salaryRecords = [];
+        
+        crew[idx].salaryRecords.push({
+          month, year, amount,
+          datePaid: new Date().toISOString()
+        });
+
+        db.save('employees', crew);
+        closeModal('modal-pay-emp');
+        renderEmployeesTab();
+      }
+    });
+
+
+    // ==================== H. POS BILLING INTERACTIVES ====================
+    let activeCustomer = null;
+
+    function renderBillingTab() {
+      const fuels = db.fuel();
+      const select = document.getElementById('pos-fuel-select');
+      select.innerHTML = '';
+
+      fuels.forEach(f => {
+        const option = document.createElement('option');
+        option.value = f._id;
+        option.innerText = `${f.fuelType} - $${f.pricePerLiter.toFixed(2)}/L`;
+        select.appendChild(option);
+      });
+
+      // Clear fields
+      document.getElementById('pos-cust-phone').value = '';
+      document.getElementById('pos-cust-name').value = '';
+      document.getElementById('pos-liters').value = '';
+      document.getElementById('pos-redeem-checkbox').checked = false;
+      
+      activeCustomer = null;
+      recalculatePosTotals();
+      hideReceipt();
+    }
+
+    // Phone Lookup live triggers
+    document.getElementById('pos-cust-phone').addEventListener('input', function(e) {
+      const phoneVal = e.target.value.trim();
+      const feedbackFound = document.getElementById('pos-loyalty-feedback');
+      const feedbackNew = document.getElementById('pos-new-loyalty-feedback');
+
+      feedbackFound.style.display = 'none';
+      feedbackNew.style.display = 'none';
+      activeCustomer = null;
+
+      if (phoneVal.length < 10) {
+        document.getElementById('pos-cust-name').value = '';
+        document.getElementById('pos-cust-name').disabled = false;
+        recalculatePosTotals();
+        return;
+      }
+
+      const customers = db.customers();
+      const match = customers.find(c => c.phone === phoneVal);
+
+      if (match) {
+        activeCustomer = match;
+        document.getElementById('pos-cust-name').value = match.name;
+        document.getElementById('pos-cust-name').disabled = true;
+
+        feedbackFound.style.display = 'flex';
+        document.getElementById('pos-loyalty-points-label').innerText = match.loyaltyPoints;
+      } else {
+        document.getElementById('pos-cust-name').value = '';
+        document.getElementById('pos-cust-name').disabled = false;
+        feedbackNew.style.display = 'block';
+      }
+
+      recalculatePosTotals();
+    });
+
+    function setPosPaymode(mode) {
+      selectedPaymode = mode;
+      document.querySelectorAll('[id^="paymode-"]').forEach(btn => {
+        btn.className = 'btn btn-secondary btn-sm';
+      });
+      document.getElementById(`paymode-${mode}`).className = 'btn btn-primary btn-sm';
+    }
+
+    // Live price sum calculations
+    function recalculatePosTotals() {
+      const fuels = db.fuel();
+      const selectedId = document.getElementById('pos-fuel-select').value;
+      const litersVal = Number(document.getElementById('pos-liters').value);
+      
+      const fuel = fuels.find(f => f._id === selectedId);
+      const rate = fuel ? fuel.pricePerLiter : 0;
+      const totalRaw = parseFloat((litersVal * rate).toFixed(2));
+
+      document.getElementById('pos-projected-points').innerText = Math.floor(totalRaw / 10);
+
+      // Loyalty check discount
+      const checkboxContainer = document.getElementById('pos-redeem-checkbox-container');
+      const noRedeemLabel = document.getElementById('pos-no-redeem-label');
+      const isChecked = document.getElementById('pos-redeem-checkbox').checked;
+
+      let discount = 0;
+
+      if (activeCustomer && activeCustomer.loyaltyPoints >= 100) {
+        checkboxContainer.style.display = 'flex';
+        noRedeemLabel.style.display = 'none';
+
+        if (isChecked) {
+          const setsOfHundred = Math.floor(activeCustomer.loyaltyPoints / 100);
+          discount = Math.min(setsOfHundred * 5, totalRaw - 0.50);
+        }
+      } else {
+        checkboxContainer.style.display = 'none';
+        noRedeemLabel.style.display = 'block';
+        document.getElementById('pos-redeem-checkbox').checked = false;
+      }
+
+      const netDue = parseFloat((totalRaw - discount).toFixed(2));
+
+      document.getElementById('pos-gross-total').innerText = `$${totalRaw.toFixed(2)}`;
+      if (discount > 0) {
+        document.getElementById('pos-discount-row').style.display = 'flex';
+        document.getElementById('pos-discount-val').innerText = `-$${discount.toFixed(2)}`;
+      } else {
+        document.getElementById('pos-discount-row').style.display = 'none';
+      }
+      document.getElementById('pos-net-due').innerText = `$${netDue.toFixed(2)}`;
+    }
+
+    // Form checkout processing
+    document.getElementById('pos-billing-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const errorBanner = document.getElementById('pos-error-banner');
+      errorBanner.style.display = 'none';
+
+      const selectedId = document.getElementById('pos-fuel-select').value;
+      const litersVal = Number(document.getElementById('pos-liters').value);
+      const isRedeemChecked = document.getElementById('pos-redeem-checkbox').checked;
+
+      const phoneVal = document.getElementById('pos-cust-phone').value.trim();
+      const nameVal = document.getElementById('pos-cust-name').value.trim() || 'Walk-in Customer';
+
+      if (litersVal <= 0) {
+        errorBanner.innerText = 'Liters pumped must be greater than 0.';
+        errorBanner.style.display = 'block';
+        return;
+      }
+
+      const fuels = db.fuel();
+      const fuelIdx = fuels.findIndex(f => f._id === selectedId);
+      const fuel = fuels[fuelIdx];
+
+      if (fuel.available < litersVal) {
+        errorBanner.innerHTML = `<strong>Insufficient Stock!</strong> Ground tank only contains ${fuel.available.toFixed(1)}L of ${fuel.fuelType}.`;
+        errorBanner.style.display = 'block';
+        return;
+      }
+
+      // Calculations
+      const grossTotal = parseFloat((litersVal * fuel.pricePerLiter).toFixed(2));
+      let discount = 0;
+      let pointsToDeduct = 0;
+
+      // Update customer ledger
+      let customers = db.customers();
+      let customerSession = activeCustomer;
+
+      if (phoneVal) {
+        if (!customerSession) {
+          // Auto create customer account
+          customerSession = {
+            _id: 'c-' + Math.random().toString(36).substring(2, 9),
+            name: nameVal,
+            phone: phoneVal,
+            loyaltyPoints: 0,
+            totalPurchases: 0
+          };
+          customers.push(customerSession);
+        }
+
+        if (isRedeemChecked && customerSession.loyaltyPoints >= 100) {
+          const sets = Math.floor(customerSession.loyaltyPoints / 100);
+          discount = Math.min(sets * 5, grossTotal - 0.50);
+          pointsToDeduct = (discount / 5) * 100;
+        }
+      }
+
+      const netPaid = parseFloat((grossTotal - discount).toFixed(2));
+      const pointsEarned = Math.floor(netPaid / 10);
+
+      // Save Customer Updates
+      if (phoneVal) {
+        const cIdx = customers.findIndex(c => c.phone === phoneVal);
+        customers[cIdx].loyaltyPoints = Math.max(0, Math.floor(customers[cIdx].loyaltyPoints - pointsToDeduct + pointsEarned));
+        customers[cIdx].totalPurchases = parseFloat((customers[cIdx].totalPurchases + netPaid).toFixed(2));
+        db.save('customers', customers);
+      }
+
+      // Decrement Inventory
+      fuels[fuelIdx].available = parseFloat((fuel.available - litersVal).toFixed(2));
+      db.save('fuel_stock', fuels);
+
+      // Create invoice record
+      const date = new Date();
+      const billNo = `TXN-${date.getFullYear().toString().slice(-2)}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}-${Math.floor(1000 + Math.random()*9000)}`;
+      
+      const transactions = db.transactions();
+      const newTxn = {
+        _id: 't-' + Math.random().toString(36).substring(2, 9),
+        billNo,
+        customerName: nameVal,
+        customerPhone: phoneVal,
+        fuelType: fuel.fuelType,
+        liters: litersVal,
+        pricePerLiter: fuel.pricePerLiter,
+        totalAmount: grossTotal,
+        discountAmount: discount,
+        netAmount: netPaid,
+        paymentMode: selectedPaymode,
+        loyaltyPointsEarned: pointsEarned,
+        date: date.toISOString()
+      };
+
+      transactions.push(newTxn);
+      db.save('transactions', transactions);
+
+      // Build thermal ticket
+      showReceipt(newTxn, customerSession ? customerSession.loyaltyPoints : null);
+      
+      // Clear forms
+      document.getElementById('pos-liters').value = '';
+      document.getElementById('pos-redeem-checkbox').checked = false;
+      
+      if (phoneVal && customerSession) {
+        // Re-trigger live lookup
+        document.getElementById('pos-cust-phone').dispatchEvent(new Event('input'));
+      } else {
+        document.getElementById('pos-cust-phone').value = '';
+        document.getElementById('pos-cust-name').value = '';
+        document.getElementById('pos-cust-name').disabled = false;
+      }
+
+      recalculatePosTotals();
+      checkLowInventoryAlerts();
+    });
+
+    function showReceipt(txn, updatedLoyaltyPoints) {
+      document.getElementById('pos-standby-preview').style.display = 'none';
+      document.getElementById('pos-receipt-container').style.display = 'block';
+      document.getElementById('pos-print-btn').style.display = 'flex';
+
+      document.getElementById('receipt-station-name').innerText = activeUser.pumpName;
+      document.getElementById('receipt-station-hotline').innerText = `Ph: ${activeUser.phone}`;
+      document.getElementById('receipt-bill-no').innerText = txn.billNo;
+      document.getElementById('receipt-date').innerText = new Date(txn.date).toLocaleString();
+      document.getElementById('receipt-operator').innerText = activeUser.name;
+      document.getElementById('receipt-cust-name').innerText = txn.customerName;
+      
+      if (txn.customerPhone) {
+        document.getElementById('receipt-cust-phone-row').style.display = 'block';
+        document.getElementById('receipt-cust-phone').innerText = txn.customerPhone;
+      } else {
+        document.getElementById('receipt-cust-phone-row').style.display = 'none';
+      }
+
+      document.getElementById('receipt-fuel-type').innerText = txn.fuelType;
+      document.getElementById('receipt-calculations').innerText = `${txn.liters.toFixed(2)}L @ $${txn.pricePerLiter.toFixed(2)}/L`;
+      document.getElementById('receipt-gross-total').innerText = `$${txn.totalAmount.toFixed(2)}`;
+      
+      if (txn.discountAmount > 0) {
+        document.getElementById('receipt-discount-row').style.display = 'flex';
+        document.getElementById('receipt-discount-val').innerText = `-$${txn.discountAmount.toFixed(2)}`;
+      } else {
+        document.getElementById('receipt-discount-row').style.display = 'none';
+      }
+
+      document.getElementById('receipt-paymode').innerText = txn.paymentMode;
+      document.getElementById('receipt-net-paid').innerText = `$${txn.netAmount.toFixed(2)}`;
+      document.getElementById('receipt-points-earned').innerText = txn.loyaltyPointsEarned;
+
+      if (updatedLoyaltyPoints !== null) {
+        document.getElementById('receipt-updated-points-row').style.display = 'block';
+        document.getElementById('receipt-updated-points').innerText = updatedLoyaltyPoints;
+      } else {
+        document.getElementById('receipt-updated-points-row').style.display = 'none';
+      }
+      lucide.createIcons();
+    }
+
+    function hideReceipt() {
+      document.getElementById('pos-standby-preview').style.display = 'flex';
+      document.getElementById('pos-receipt-container').style.display = 'none';
+      document.getElementById('pos-print-btn').style.display = 'none';
+    }
+
+    function triggerReceiptPrint() {
+      window.print();
+    }
+
+
+    // ==================== I. SALES REPORTS RENDERING & PDF EXPORTER ====================
+    function renderReportsTab() {
+      // populate fuel grade filter
+      const fuels = db.fuel();
+      const select = document.getElementById('report-fuel-filter');
+      select.innerHTML = '<option value="">-- All Fuel Grades --</option>';
+
+      fuels.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f.fuelType;
+        opt.innerText = f.fuelType;
+        select.appendChild(opt);
+      });
+
+      document.getElementById('report-search-query').value = '';
+      document.getElementById('report-start-date').value = '';
+      document.getElementById('report-end-date').value = '';
+      document.getElementById('report-timeframe').value = 'monthly';
+      document.getElementById('report-fuel-filter').value = '';
+
+      handleTimeframeChange();
+    }
+
+    function handleTimeframeChange() {
+      const timeframe = document.getElementById('report-timeframe').value;
+      const customDates = document.getElementById('report-custom-dates');
+      
+      if (timeframe === 'custom') customDates.style.display = 'flex';
+      else customDates.style.display = 'none';
+
+      fetchSalesReportData();
+    }
+
+    function fetchSalesReportData() {
+      const timeframe = document.getElementById('report-timeframe').value;
+      const fuelVal = document.getElementById('report-fuel-filter').value;
+      const startDateVal = document.getElementById('report-start-date').value;
+      const endDateVal = document.getElementById('report-end-date').value;
+
+      const txns = db.transactions();
+      
+      const now = new Date();
+      let startLimit = new Date();
+
+      if (timeframe === 'daily') {
+        startLimit.setHours(0,0,0,0);
+      } else if (timeframe === 'weekly') {
+        startLimit.setDate(now.getDate() - 7);
+      } else if (timeframe === 'monthly') {
+        startLimit.setDate(now.getDate() - 30);
+      } else if (timeframe === 'custom' && startDateVal) {
+        startLimit = new Date(startDateVal);
+        startLimit.setHours(0,0,0,0);
+      } else {
+        startLimit.setDate(now.getDate() - 30); // fallback monthly
+      }
+
+      let endLimit = new Date();
+      if (timeframe === 'custom' && endDateVal) {
+        endLimit = new Date(endDateVal);
+        endLimit.setHours(23,59,59,999);
+      }
+
+      // Filter
+      let filtered = txns.filter(t => {
+        const date = new Date(t.date);
+        const inDate = date >= startLimit && date <= endLimit;
+        const matchesFuel = fuelVal ? t.fuelType === fuelVal : true;
+        return inDate && matchesFuel;
+      });
+
+      // Sort latest first
+      filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+      reportsSalesData = filtered;
+      applyReportFilters();
+    }
+
+    function applyReportFilters() {
+      if (!reportsSalesData) return;
+
+      const query = document.getElementById('report-search-query').value.toLowerCase().trim();
+      
+      let items = [...reportsSalesData];
+      if (query) {
+        items = items.filter(t => 
+          t.billNo.toLowerCase().includes(query) || 
+          t.customerName.toLowerCase().includes(query) ||
+          (t.customerPhone && t.customerPhone.includes(query))
+        );
+      }
+
+      // Calculate aggregates
+      let revenue = 0;
+      let liters = 0;
+
+      items.forEach(t => {
+        revenue += t.netAmount;
+        liters += t.liters;
+      });
+
+      document.getElementById('rep-kpi-revenue').innerText = `$${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('rep-kpi-liters').innerText = `${liters.toLocaleString(undefined, { maximumFractionDigits: 0 })} L`;
+      document.getElementById('rep-kpi-count').innerText = `${items.length} Invoices`;
+
+      // Render rows
+      const tbody = document.getElementById('reports-table-body');
+      tbody.innerHTML = '';
+
+      if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:3rem; text-align:center; color:var(--text-muted);">No logs match filter parameters</td></tr>';
+        document.getElementById('report-pdf-export-btn').disabled = true;
+        return;
+      }
+      
+      document.getElementById('report-pdf-export-btn').disabled = false;
+
+      items.forEach(txn => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color: var(--text-secondary); font-size: 0.85rem;">
+            ${new Date(txn.date).toLocaleDateString()} <span style="font-size:0.75rem; color:var(--text-muted);">${new Date(txn.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </td>
+          <td style="font-weight: 700; fontFamily: monospace;">${txn.billNo}</td>
+          <td>
+            <p style="font-weight: 600;">${txn.customerName}</p>
+            ${txn.customerPhone ? `<span style="font-size: 0.75rem; color: var(--text-muted);">Ph: ${txn.customerPhone}</span>` : ''}
+          </td>
+          <td><span class="badge" style="background-color: var(--primary-light); color: var(--text-primary);">${txn.fuelType}</span></td>
+          <td style="font-weight: 500;">${txn.liters.toFixed(2)}L</td>
+          <td>$${txn.pricePerLiter.toFixed(2)}</td>
+          <td style="color: ${txn.discountAmount > 0 ? 'var(--success)' : 'var(--text-muted)'}; font-weight: ${txn.discountAmount > 0 ? 600 : 400};">
+            ${txn.discountAmount > 0 ? `-$${txn.discountAmount.toFixed(2)}` : '$0.00'}
+          </td>
+          <td style="font-weight: 700; color: var(--accent);">$${txn.netAmount.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Direct PDF compilation via jsPDF UMD
+    function exportReportToPDF() {
+      const query = document.getElementById('report-search-query').value.toLowerCase().trim();
+      let items = [...reportsSalesData];
+      if (query) {
+        items = items.filter(t => 
+          t.billNo.toLowerCase().includes(query) || 
+          t.customerName.toLowerCase().includes(query) ||
+          (t.customerPhone && t.customerPhone.includes(query))
+        );
+      }
+
+      if (items.length === 0) return;
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Brand Title
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.setTextColor(15, 23, 42); // slate-900
+      doc.text('FUELFLOW MANAGEMENT SYSTEM', 14, 20);
+
+      doc.setFontSize(12);
+      doc.setFont('Helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text('Commercial Sales Report & Performance Ledger', 14, 26);
+      doc.line(14, 28, 196, 28);
+
+      // Metadata details
+      doc.setFontSize(9);
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(15, 23, 42);
+      doc.text('Pump Location:', 14, 36);
+      doc.text('Operator ID:', 14, 41);
+      doc.text('Scope range:', 14, 46);
+      doc.text('Export Date:', 120, 36);
+      doc.text('Fuel Filter:', 120, 41);
+      doc.text('Total Invoices:', 120, 46);
+
+      doc.setFont('Helvetica', 'normal');
+      doc.setTextColor(71, 85, 105);
+      doc.text(activeUser.pumpName, 43, 36);
+      doc.text(activeUser.name, 43, 41);
+      doc.text(document.getElementById('report-timeframe').value.toUpperCase(), 43, 46);
+      doc.text(new Date().toLocaleString(), 145, 36);
+      doc.text(document.getElementById('report-fuel-filter').value || 'ALL FUEL GRADES', 145, 41);
+      doc.text(`${items.length} Transactions`, 145, 46);
+
+      // Summary agregates
+      const totalVolume = items.reduce((acc, curr) => acc + curr.liters, 0);
+      const totalRevenue = items.reduce((acc, curr) => acc + curr.netAmount, 0);
+
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(14, 52, 182, 14, 2, 2, 'F');
+
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(249, 115, 22); // orange accent
+      doc.text(`TOTAL REVENUE: $${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 20, 61);
+      doc.setTextColor(59, 130, 246);
+      doc.text(`TOTAL VOLUME SOLD: ${totalVolume.toLocaleString(undefined, { maximumFractionDigits: 1 })} Liters`, 110, 61);
+
+      // Render sales table
+      const columns = [
+        { title: 'Date & Time', dataKey: 'date' },
+        { title: 'Bill No', dataKey: 'billNo' },
+        { title: 'Customer', dataKey: 'customer' },
+        { title: 'Fuel Grade', dataKey: 'fuelType' },
+        { title: 'Quantity (L)', dataKey: 'liters' },
+        { title: 'Payment', dataKey: 'paymentMode' },
+        { title: 'Net Paid', dataKey: 'netAmount' }
+      ];
+
+      const rows = items.map(txn => ({
+        date: new Date(txn.date).toLocaleDateString() + ' ' + new Date(txn.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        billNo: txn.billNo,
+        customer: txn.customerName,
+        fuelType: txn.fuelType,
+        liters: txn.liters.toFixed(1) + 'L',
+        paymentMode: txn.paymentMode,
+        netAmount: `$${txn.netAmount.toFixed(2)}`
+      }));
+
+      doc.autoTable({
+        columns: columns,
+        body: rows,
+        startY: 72,
+        theme: 'grid',
+        styles: { fontSize: 8.5, font: 'Helvetica', cellPadding: 3 },
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
+        columnStyles: { netAmount: { halign: 'right', fontStyle: 'bold' }, billNo: { fontStyle: 'bold' } },
+        alternateRowStyles: { fillColor: [248, 250, 252] }
+      });
+
+      const filename = `FuelFlow_Sales_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      doc.save(filename);
+    }
+
+
+    // ==================== J. SETTINGS TAB RENDERING ====================
+    function renderSettingsTab() {
+      // Populate admin profile fields
+      document.getElementById('settings-pump-name').value = activeUser.pumpName;
+      document.getElementById('settings-phone').value = activeUser.phone;
+      document.getElementById('settings-admin-name').value = activeUser.name;
+      
+      document.getElementById('settings-password').value = '';
+      document.getElementById('settings-confirm-password').value = '';
+      document.getElementById('settings-success-alert').style.display = 'none';
+
+      // Render regular customers list
+      const customers = db.customers();
+      const tbody = document.getElementById('settings-customers-body');
+      tbody.innerHTML = '';
+
+      customers.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <p style="font-weight: 600;">${c.name}</p>
+            <p style="font-size: 0.7rem; color: var(--text-muted);">Ph: ${c.phone}</p>
+          </td>
+          <td style="font-weight: 600;">$${c.totalPurchases.toFixed(2)}</td>
+          <td>
+            <span class="badge badge-success" style="font-weight: 700; font-size: 0.7rem;">
+              ⭐ ${c.loyaltyPoints} Points
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Submit settings edits
+    document.getElementById('settings-profile-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const pumpName = document.getElementById('settings-pump-name').value.trim();
+      const phone = document.getElementById('settings-phone').value.trim();
+      const name = document.getElementById('settings-admin-name').value.trim();
+      const pass = document.getElementById('settings-password').value;
+      const confirmPass = document.getElementById('settings-confirm-password').value;
+
+      if (pass && pass !== confirmPass) {
+        alert('Passwords do not match.');
+        return;
+      }
+
+      // Save user profile details
+      const users = db.users();
+      const idx = users.findIndex(u => u._id === activeUser._id);
+
+      if (idx !== -1) {
+        users[idx].pumpName = pumpName;
+        users[idx].phone = phone;
+        users[idx].name = name;
+        if (pass) users[idx].password = pass;
+
+        db.save('users', users);
+        
+        // Update session
+        activeUser = users[idx];
+        sessionStorage.setItem('active_session', JSON.stringify(activeUser));
+        
+        // Apply changes
+        bootAppShell();
+
+        // Show banner alert
+        const banner = document.getElementById('settings-success-alert');
+        banner.style.display = 'flex';
+        setTimeout(() => { banner.style.display = 'none'; }, 4000);
+      }
+    });
+
+
+    // ==================== L. INITIAL BOOTLOADER ====================
+    window.addEventListener('DOMContentLoaded', () => {
+      initializeMockDatabase();
+      checkAuthSession();
+      setThemeMode('dark'); // default Dark theme
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
